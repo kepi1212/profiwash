@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfiWash — Tlakové čištění</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f6fb;
+  --white: #ffffff;
+  --ink: #16181f;
+  --ink2: #3d4252;
+  --muted: #9097ae;
+  --accent: #2563eb;
+  --accent-light: #eff4ff;
+  --accent-mid: #bfcfff;
+  --border: #e3e7f0;
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Nunito', sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ══════════════════════════════════
+   KEYFRAMES
+══════════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(-22px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(22px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scalePop {
+  0%   { opacity: 0; transform: scale(0.82); }
+  70%  { transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes bounce {
+  0%   { opacity: 0; transform: translateY(-14px) scale(0.95); }
+  60%  { transform: translateY(5px) scale(1.02); opacity: 1; }
+  80%  { transform: translateY(-3px); }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes pricePop {
+  0%   { transform: scale(0.88); opacity: 0.3; }
+  60%  { transform: scale(1.06); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes ripple {
+  0%   { box-shadow: 0 0 0 0 rgba(37,99,235,0.3); }
+  70%  { box-shadow: 0 0 0 10px rgba(37,99,235,0); }
+  100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes rotateSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes stepLine {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes numCount {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes borderDash {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes waveIn {
+  0%   { clip-path: inset(0 100% 0 0); }
+  100% { clip-path: inset(0 0% 0 0); }
+}
+@keyframes navSlideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+/* ══════════════════════════════════
+   SCROLL REVEAL — robust version
+══════════════════════════════════ */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s cubic-bezier(.22,1,.36,1),
+              transform 0.6s cubic-bezier(.22,1,.36,1);
+}
+.reveal.up    { transform: translateY(30px); }
+.reveal.left  { transform: translateX(-30px); }
+.reveal.right { transform: translateX(30px); }
+.reveal.scale { transform: scale(0.9); }
+.reveal.visible {
+  opacity: 1;
+  transform: none !important;
+}
+.reveal-d1 { transition-delay: 0.05s; }
+.reveal-d2 { transition-delay: 0.15s; }
+.reveal-d3 { transition-delay: 0.25s; }
+.reveal-d4 { transition-delay: 0.35s; }
+
+/* ══════════════════════════════════
+   NAV
+══════════════════════════════════ */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(244,246,251,0.94);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 48px;
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+  animation: navSlideDown 0.5s 0.05s cubic-bezier(.22,1,.36,1) both;
+}
+.logo {
+  font-weight: 900; font-size: 1.35rem;
+  letter-spacing: -0.02em; color: var(--ink);
+  animation: slideLeft 0.5s 0.15s both;
+}
+.logo span { color: var(--accent); }
+.nav-links { display: flex; gap: 32px; align-items: center; animation: fadeIn 0.5s 0.3s both; }
+.nav-links a {
+  color: var(--ink2); text-decoration: none;
+  font-size: 0.9rem; font-weight: 600;
+  position: relative; padding-bottom: 2px;
+  transition: color 0.2s;
+}
+.nav-links a::after {
+  content: ''; position: absolute;
+  bottom: 0; left: 0; right: 0; height: 2px;
+  background: var(--accent); border-radius: 2px;
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.25s cubic-bezier(.22,1,.36,1);
+}
+.nav-links a:hover { color: var(--accent); }
+.nav-links a:hover::after { transform: scaleX(1); }
+.nav-cta {
+  background: var(--accent); color: #fff;
+  padding: 9px 22px; border-radius: 100px;
+  font-weight: 700; font-size: 0.88rem;
+  text-decoration: none;
+  animation: ripple 2.5s 2s ease-out infinite;
+  transition: opacity 0.2s, transform 0.15s;
+  display: inline-block;
+}
+.nav-cta:hover { opacity: 0.88; transform: translateY(-1px) scale(1.03); }
+
+/* ══════════════════════════════════
+   HERO
+══════════════════════════════════ */
+.hero {
+  padding: 130px 48px 80px;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex; gap: 60px; align-items: center;
+  position: relative; overflow: hidden;
+}
+/* Decorative blobs */
+.hero::before {
+  content: '';
+  position: absolute; top: -80px; right: -80px;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(37,99,235,0.07) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float 6s ease-in-out infinite;
+  pointer-events: none;
+}
+.hero::after {
+  content: '';
+  position: absolute; bottom: -60px; left: 30%;
+  width: 250px; height: 250px;
+  background: radial-gradient(circle, rgba(37,99,235,0.05) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float 8s 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.hero-text { flex: 1; }
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--accent-light); color: var(--accent);
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 5px 14px; border-radius: 100px;
+  margin-bottom: 24px;
+  animation: slideLeft 0.55s 0.2s cubic-bezier(.22,1,.36,1) both;
+}
+.hero h1 {
+  font-weight: 900; font-size: clamp(2.4rem, 5vw, 4rem);
+  line-height: 1.1; letter-spacing: -0.03em; color: var(--ink);
+  margin-bottom: 18px;
+  animation: fadeUp 0.65s 0.3s cubic-bezier(.22,1,.36,1) both;
+}
+.hero h1 em {
+  color: var(--accent); font-style: normal;
+  background: linear-gradient(90deg, #2563eb, #60a5fa, #2563eb);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s 1.5s linear infinite;
+}
+.hero p {
+  color: var(--ink2); font-size: 1rem; font-weight: 500;
+  line-height: 1.8; max-width: 420px; margin-bottom: 32px;
+  animation: fadeUp 0.65s 0.42s cubic-bezier(.22,1,.36,1) both;
+}
+.hero-btns {
+  display: flex; gap: 12px; align-items: center;
+  animation: fadeUp 0.65s 0.54s cubic-bezier(.22,1,.36,1) both;
+}
+.btn-main {
+  background: var(--accent); color: #fff;
+  padding: 13px 28px; border-radius: 100px;
+  font-weight: 700; font-size: 0.95rem;
+  text-decoration: none; border: none; cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+  display: inline-block;
+  font-family: 'Nunito', sans-serif;
+}
+.btn-main:hover {
+  opacity: 0.9; transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 24px rgba(37,99,235,0.3);
+}
+.btn-ghost {
+  color: var(--ink2); font-size: 0.9rem; font-weight: 600;
+  text-decoration: none; padding: 13px 20px;
+  border: 1.5px solid var(--border); border-radius: 100px;
+  transition: border-color 0.2s, color 0.2s, transform 0.2s;
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+
+/* Hero visual */
+.hero-visual {
+  flex: 0 0 320px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  display: flex; flex-direction: column; gap: 12px;
+  animation: slideRight 0.65s 0.35s cubic-bezier(.22,1,.36,1) both;
+}
+.visual-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  display: flex; align-items: center; gap: 12px;
+  transition: box-shadow 0.25s, transform 0.25s, border-color 0.25s;
+  cursor: default;
+}
+.visual-card:nth-child(1) { animation: bounce 0.6s 0.55s both; }
+.visual-card:nth-child(2) { animation: bounce 0.6s 0.70s both; }
+.visual-card:nth-child(3) { animation: bounce 0.6s 0.85s both; }
+.visual-card:hover {
+  box-shadow: 0 6px 24px rgba(37,99,235,0.1);
+  transform: translateX(-3px);
+  border-color: var(--accent-mid);
+}
+.visual-icon {
+  width: 38px; height: 38px;
+  background: var(--accent-light);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+  transition: transform 0.3s;
+}
+.visual-card:hover .visual-icon { transform: scale(1.15) rotate(-5deg); }
+.visual-text { flex: 1; }
+.visual-name { font-weight: 700; font-size: 0.88rem; color: var(--ink); }
+.visual-price { font-size: 0.78rem; color: var(--muted); margin-top: 1px; font-weight: 500; }
+.visual-badge {
+  font-size: 0.75rem; font-weight: 700;
+  color: var(--accent); background: var(--accent-light);
+  padding: 3px 10px; border-radius: 100px; white-space: nowrap;
+}
+
+/* ══════════════════════════════════
+   HOW IT WORKS
+══════════════════════════════════ */
+.how {
+  padding: 90px 48px;
+  background: var(--bg);
+  position: relative; overflow: hidden;
+}
+/* Animated background line */
+.how::before {
+  content: '';
+  position: absolute; top: 50%; left: 48px; right: 48px; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+  transform-origin: left;
+  animation: stepLine 1.2s 0.5s cubic-bezier(.22,1,.36,1) both;
+  pointer-events: none;
+}
+.section-eyebrow {
+  font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 10px;
+}
+.section-title {
+  font-weight: 900; font-size: clamp(1.8rem, 3vw, 2.4rem);
+  letter-spacing: -0.03em; margin-bottom: 40px; color: var(--ink);
+}
+.steps {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 16px; position: relative; z-index: 1;
+}
+.step {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+  transition: transform 0.25s cubic-bezier(.22,1,.36,1), box-shadow 0.25s, border-color 0.25s;
+  position: relative; overflow: hidden;
+}
+.step::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--accent);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.35s cubic-bezier(.22,1,.36,1);
+}
+.step:hover { transform: translateY(-6px); box-shadow: 0 12px 32px rgba(37,99,235,0.1); border-color: var(--accent-mid); }
+.step:hover::before { transform: scaleX(1); }
+.step-num {
+  font-weight: 900; font-size: 2.6rem;
+  color: var(--accent-mid); line-height: 1;
+  margin-bottom: 14px;
+  transition: color 0.25s, transform 0.25s;
+}
+.step:hover .step-num { color: var(--accent); transform: scale(1.08); }
+.step-title { font-weight: 800; font-size: 1rem; margin-bottom: 8px; color: var(--ink); }
+.step-desc { color: var(--muted); font-size: 0.88rem; line-height: 1.65; font-weight: 500; }
+.step-icon {
+  font-size: 1.5rem; margin-bottom: 14px; display: block;
+  transition: transform 0.3s;
+}
+.step:hover .step-icon { transform: rotate(-8deg) scale(1.2); }
+
+/* ══════════════════════════════════
+   CALCULATOR
+══════════════════════════════════ */
+.calc-section {
+  padding: 90px 48px;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.calc-wrap { max-width: 760px; margin: 0 auto; }
+.calc-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-top: 40px;
+  transition: box-shadow 0.3s;
+}
+.calc-box:hover { box-shadow: 0 8px 40px rgba(37,99,235,0.08); }
+.calc-head {
+  background: var(--ink);
+  color: #fff; padding: 20px 32px;
+  font-weight: 800; font-size: 1rem;
+  display: flex; align-items: center; gap: 10px;
+}
+.calc-head span { color: rgba(255,255,255,0.4); font-size: 0.85rem; font-weight: 500; }
+.calc-body { padding: 28px 32px; display: flex; flex-direction: column; gap: 24px; }
+.field-label {
+  display: block; font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink2); margin-bottom: 12px;
+}
+
+/* Service cards */
+.service-cards { display: flex; flex-direction: column; gap: 10px; }
+.svc-card {
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  cursor: pointer;
+}
+.svc-card:hover { transform: translateX(3px); border-color: var(--accent-mid); box-shadow: 0 4px 16px rgba(37,99,235,0.07); }
+.svc-card.selected { border-color: var(--accent); box-shadow: 0 4px 20px rgba(37,99,235,0.12); }
+.svc-card-header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px; user-select: none;
+}
+.svc-check {
+  width: 22px; height: 22px;
+  border: 2px solid var(--border);
+  border-radius: 6px; flex-shrink: 0;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s cubic-bezier(.34,1.56,.64,1);
+  font-size: 0.85rem; color: transparent; font-weight: 900;
+}
+.svc-card.selected .svc-check {
+  background: var(--accent); border-color: var(--accent);
+  color: #fff; transform: scale(1.1);
+}
+.svc-icon {
+  width: 36px; height: 36px;
+  background: var(--accent-light);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+  transition: transform 0.25s;
+}
+.svc-card.selected .svc-icon { transform: rotate(-8deg) scale(1.1); animation: float 3s ease-in-out infinite; }
+.svc-info { flex: 1; }
+.svc-name { font-weight: 800; font-size: 0.92rem; color: var(--ink); }
+.svc-sub { font-size: 0.78rem; color: var(--muted); font-weight: 500; margin-top: 1px; }
+.svc-price-tag {
+  font-weight: 800; font-size: 0.88rem;
+  color: var(--accent); background: var(--accent-light);
+  padding: 4px 12px; border-radius: 100px;
+  transition: transform 0.2s;
+}
+.svc-card.selected .svc-price-tag { transform: scale(1.05); }
+
+/* Slider panel */
+.svc-slider-panel {
+  display: block !important;
+  max-height: 0; opacity: 0; overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(.22,1,.36,1), opacity 0.3s ease;
+  padding: 0 18px 0 70px;
+  background: var(--accent-light);
+  border-top: 0px solid var(--border);
+}
+.svc-card.selected .svc-slider-panel {
+  max-height: 160px; opacity: 1;
+  padding-bottom: 16px; padding-top: 0;
+  border-top-width: 1px;
+}
+.svc-slider-panel label {
+  display: block; font-size: 0.78rem; font-weight: 700;
+  color: var(--accent); text-transform: uppercase;
+  letter-spacing: 0.07em; padding-top: 12px; margin-bottom: 8px;
+}
+.svc-slider-panel label strong { font-size: 1rem; }
+input[type="range"].svc-slider {
+  width: 100%; accent-color: var(--accent);
+  height: 4px; cursor: pointer;
+  transition: opacity 0.2s;
+}
+input[type="range"].svc-slider:hover { opacity: 0.9; }
+.svc-slider-minmax {
+  display: flex; justify-content: space-between;
+  font-size: 0.72rem; color: var(--accent); font-weight: 600;
+  margin-top: 5px; opacity: 0.55;
+}
+.svc-line-total {
+  display: flex; justify-content: space-between;
+  margin-top: 10px; font-size: 0.82rem; font-weight: 700; color: var(--ink2);
+  border-top: 1px solid rgba(37,99,235,0.12); padding-top: 10px;
+}
+.svc-line-total span:last-child { color: var(--accent); }
+
+/* Result strip */
+.calc-result-strip {
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.calc-result-strip.has-price {
+  border-color: var(--accent-mid);
+  box-shadow: 0 4px 20px rgba(37,99,235,0.1);
+}
+.result-info { flex: 1; }
+.result-label { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; font-weight: 700; }
+.result-price {
+  font-weight: 900; font-size: 2rem;
+  color: var(--ink); line-height: 1; letter-spacing: -0.03em;
+}
+.result-price small { font-size: 0.82rem; color: var(--muted); font-weight: 500; }
+.result-note { font-size: 0.78rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
+.price-pop { animation: pricePop 0.35s cubic-bezier(.34,1.56,.64,1) both; }
+.btn-order {
+  background: var(--accent); color: #fff;
+  padding: 13px 26px; border-radius: 100px;
+  font-weight: 700; font-size: 0.92rem;
+  border: none; cursor: pointer; white-space: nowrap;
+  font-family: 'Nunito', sans-serif;
+  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.btn-order:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(37,99,235,0.28); }
+
+/* ══════════════════════════════════
+   FORM
+══════════════════════════════════ */
+.form-section { padding: 90px 48px; background: var(--bg); }
+.form-wrap { max-width: 640px; margin: 0 auto; }
+.form-box {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden; margin-top: 40px;
+  transition: box-shadow 0.3s;
+}
+.form-box:hover { box-shadow: 0 8px 40px rgba(37,99,235,0.07); }
+.form-box-head {
+  background: var(--accent);
+  color: #fff; padding: 20px 32px;
+  font-weight: 800; font-size: 1rem;
+}
+.form-box-body { padding: 28px 32px; display: flex; flex-direction: column; gap: 16px; }
+
+.price-pill {
+  background: var(--accent-light);
+  border: 1.5px solid var(--accent-mid);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.88rem; font-weight: 600;
+  animation: scalePop 0.4s both;
+}
+.price-pill-label { color: var(--accent); }
+.price-pill-val { font-weight: 900; font-size: 1rem; color: var(--accent); }
+
+.fg { display: flex; flex-direction: column; }
+.fg label {
+  font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink2); margin-bottom: 7px;
+}
+.fg input, .fg textarea {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.92rem; color: var(--ink); font-weight: 500;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+.fg input::placeholder, .fg textarea::placeholder { color: var(--muted); }
+.fg input:focus, .fg textarea:focus {
+  border-color: var(--accent); background: var(--white);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  transform: translateY(-1px);
+}
+.fg textarea { resize: vertical; min-height: 90px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.form-services-summary {
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px 16px;
+  font-size: 0.85rem; color: var(--ink2); font-weight: 500; line-height: 1.8;
+  transition: border-color 0.2s;
+}
+.form-services-summary:not(:empty) { border-color: var(--accent-mid); }
+.form-services-summary strong {
+  color: var(--ink); font-weight: 800; display: block; margin-bottom: 6px;
+  font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+.btn-send {
+  background: var(--accent); color: #fff;
+  padding: 15px; border: none; border-radius: 100px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800; font-size: 1rem;
+  cursor: pointer; width: 100%;
+  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.btn-send:hover {
+  opacity: 0.9; transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(37,99,235,0.28);
+}
+.btn-send:active { transform: translateY(0) scale(0.98); }
+
+.success-banner {
+  display: none;
+  background: #edfaf3; border: 1.5px solid #34c97a;
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+  color: #1a6b42; font-size: 0.88rem; line-height: 1.65; font-weight: 600;
+  animation: scalePop 0.4s both;
+}
+
+/* ══════════════════════════════════
+   FOOTER
+══════════════════════════════════ */
+footer {
+  background: var(--ink); color: rgba(255,255,255,0.4);
+  padding: 28px 48px;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.82rem; font-weight: 600;
+}
+.footer-logo { font-weight: 900; color: #fff; font-size: 1.1rem; letter-spacing: -0.02em; }
+.footer-logo span { color: var(--accent); }
+
+/* ══════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════ */
+@media (max-width: 820px) {
+  nav { padding: 0 20px; }
+  .nav-links { display: none; }
+  .hero { flex-direction: column; padding: 100px 20px 50px; gap: 32px; }
+  .hero::before, .hero::after { display: none; }
+  .hero-visual { flex: none; width: 100%; }
+  .how, .calc-section, .form-section { padding: 60px 20px; }
+  .how::before { display: none; }
+  .steps { grid-template-columns: 1fr; }
+  .calc-body { padding: 20px; }
+  .form-row { grid-template-columns: 1fr; }
+  .form-box-body { padding: 20px; }
+  footer { flex-direction: column; gap: 10px; text-align: center; padding: 24px 20px; }
+  .svc-slider-panel { padding-left: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Profi<span>Wash</span></div>
+  <div class="nav-links">
+    <a href="#jak-to-funguje" onclick="event.preventDefault();document.getElementById('jak-to-funguje').scrollIntoView({behavior:'smooth'})">Jak to funguje</a>
+    <a href="#kalkulator" onclick="event.preventDefault();document.getElementById('kalkulator').scrollIntoView({behavior:'smooth'})">Kalkulačka</a>
+    <a href="#poptavka" class="nav-cta" onclick="event.preventDefault();document.getElementById('poptavka').scrollIntoView({behavior:'smooth'})">Nezávazná poptávka</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-text">
+    <div class="hero-tag">💧 Tlakové čištění</div>
+    <h1>Příjezdová cesta <em>jako nová</em> — za jeden den.</h1>
+    <p>Čistíme příjezdové cesty, chodníky a obrubníky. Spočítejte si cenu za 30 sekund a pošlete poptávku.</p>
+    <div class="hero-btns">
+      <a href="#kalkulator" class="btn-main" onclick="event.preventDefault();document.getElementById('kalkulator').scrollIntoView({behavior:'smooth'})">Spočítat cenu →</a>
+      <a href="#jak-to-funguje" class="btn-ghost" onclick="event.preventDefault();document.getElementById('jak-to-funguje').scrollIntoView({behavior:'smooth'})">Jak to funguje</a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="visual-card">
+      <div class="visual-icon">🚗</div>
+      <div class="visual-text">
+        <div class="visual-name">Příjezdová cesta</div>
+        <div class="visual-price">dlažba, beton, asfalt</div>
+      </div>
+      <div class="visual-badge">49 Kč/m²</div>
+    </div>
+    <div class="visual-card">
+      <div class="visual-icon">🚶</div>
+      <div class="visual-text">
+        <div class="visual-name">Chodníky</div>
+        <div class="visual-price">beton, kámen, cihla</div>
+      </div>
+      <div class="visual-badge">49 Kč/m²</div>
+    </div>
+    <div class="visual-card">
+      <div class="visual-icon">🧱</div>
+      <div class="visual-text">
+        <div class="visual-name">Obrubníky</div>
+        <div class="visual-price">lemování, přechody</div>
+      </div>
+      <div class="visual-badge">29 Kč/bm</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="jak-to-funguje">
+  <div class="section-eyebrow reveal">Jak to funguje</div>
+  <div class="section-title reveal">Tři kroky k čisté ploše</div>
+  <div class="steps">
+    <div class="step reveal reveal-d1">
+      <span class="step-icon">🧮</span>
+      <div class="step-num">01</div>
+      <div class="step-title">Spočítejte cenu</div>
+      <div class="step-desc">Vyberte typ povrchu — klidně více najednou. Každému nastavte plochu a ihned vidíte celkovou cenu.</div>
+    </div>
+    <div class="step reveal reveal-d2">
+      <span class="step-icon">✉️</span>
+      <div class="step-num">02</div>
+      <div class="step-title">Pošlete poptávku</div>
+      <div class="step-desc">Vyplňte jméno, adresu a plochu. Formulář pošle vše přímo na mail — bez registrace.</div>
+    </div>
+    <div class="step reveal reveal-d3">
+      <span class="step-icon">📅</span>
+      <div class="step-num">03</div>
+      <div class="step-title">Domluvíme termín</div>
+      <div class="step-desc">Do 48 hodin se ozvu s potvrzením a termínem. Platíte až po dokončení práce.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CALCULATOR -->
+<section class="calc-section" id="kalkulator">
+  <div class="calc-wrap">
+    <div class="section-eyebrow reveal">Kalkulačka</div>
+    <div class="section-title reveal reveal-d1">Kolik to bude stát?</div>
+    <div class="calc-box reveal reveal-d2">
+      <div class="calc-head">
+        Spočítat cenu <span>— orientační, finální cena po prohlídce</span>
+      </div>
+      <div class="calc-body">
+        <div>
+          <span class="field-label">Vyberte služby — lze vybrat více najednou</span>
+          <div class="service-cards">
+
+            <div class="svc-card" id="card-0" onclick="toggleService(0)">
+              <div class="svc-card-header">
+                <div class="svc-check" id="check-0">✓</div>
+                <div class="svc-icon">🚗</div>
+                <div class="svc-info">
+                  <div class="svc-name">Příjezdová cesta</div>
+                  <div class="svc-sub">dlažba, beton, asfalt</div>
+                </div>
+                <div class="svc-price-tag">49 Kč/m²</div>
+              </div>
+              <div class="svc-slider-panel" onclick="event.stopPropagation()">
+                <label>Plocha: <strong id="val-0">50</strong> m²</label>
+                <input type="range" class="svc-slider" id="slider-0" min="10" max="500" value="50" oninput="updateCalc()">
+                <div class="svc-slider-minmax"><span>10 m²</span><span>500 m²</span></div>
+                <div class="svc-line-total"><span>Mezisoučet</span><span id="sub-0">2 450 Kč</span></div>
+              </div>
+            </div>
+
+            <div class="svc-card" id="card-1" onclick="toggleService(1)">
+              <div class="svc-card-header">
+                <div class="svc-check" id="check-1">✓</div>
+                <div class="svc-icon">🚶</div>
+                <div class="svc-info">
+                  <div class="svc-name">Chodníky</div>
+                  <div class="svc-sub">beton, kámen, cihla</div>
+                </div>
+                <div class="svc-price-tag">49 Kč/m²</div>
+              </div>
+              <div class="svc-slider-panel" onclick="event.stopPropagation()">
+                <label>Plocha: <strong id="val-1">30</strong> m²</label>
+                <input type="range" class="svc-slider" id="slider-1" min="10" max="300" value="30" oninput="updateCalc()">
+                <div class="svc-slider-minmax"><span>10 m²</span><span>300 m²</span></div>
+                <div class="svc-line-total"><span>Mezisoučet</span><span id="sub-1">1 470 Kč</span></div>
+              </div>
+            </div>
+
+            <div class="svc-card" id="card-2" onclick="toggleService(2)">
+              <div class="svc-card-header">
+                <div class="svc-check" id="check-2">✓</div>
+                <div class="svc-icon">🧱</div>
+                <div class="svc-info">
+                  <div class="svc-name">Obrubníky</div>
+                  <div class="svc-sub">lemování, přechody</div>
+                </div>
+                <div class="svc-price-tag">29 Kč/bm</div>
+              </div>
+              <div class="svc-slider-panel" onclick="event.stopPropagation()">
+                <label>Délka: <strong id="val-2">20</strong> bm</label>
+                <input type="range" class="svc-slider" id="slider-2" min="5" max="200" value="20" oninput="updateCalc()">
+                <div class="svc-slider-minmax"><span>5 bm</span><span>200 bm</span></div>
+                <div class="svc-line-total"><span>Mezisoučet</span><span id="sub-2">580 Kč</span></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="calc-result-strip" id="resultStrip">
+          <div class="result-info">
+            <div class="result-label">Celková orientační cena</div>
+            <div class="result-price" id="resultPrice">— <small>vyberte službu</small></div>
+            <div class="result-note" id="resultNote">Klikněte na službu výše a nastavte plochu</div>
+          </div>
+          <button class="btn-order" onclick="document.getElementById('poptavka').scrollIntoView({behavior:'smooth'})">Poptejte →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FORM -->
+<section class="form-section" id="poptavka">
+  <div class="form-wrap">
+    <div class="section-eyebrow reveal">Poptávka</div>
+    <div class="section-title reveal reveal-d1">Napište nám</div>
+    <div class="form-box reveal reveal-d2">
+      <div class="form-box-head">Nezávazná poptávka — zdarma, bez závazku</div>
+      <div class="form-box-body">
+        <div class="price-pill">
+          <span class="price-pill-label">Vaše orientační cena z kalkulačky:</span>
+          <span class="price-pill-val" id="formPrice">—</span>
+        </div>
+        <div class="form-services-summary" id="formServicesSummary">
+          <strong>Vybrané služby</strong>
+          Zatím nevybráno — nastavte kalkulačku výše.
+        </div>
+        <div class="form-row">
+          <div class="fg">
+            <label>Jméno a příjmení *</label>
+            <input type="text" id="fName" placeholder="Jan Novák">
+          </div>
+          <div class="fg">
+            <label>Telefon *</label>
+            <input type="tel" id="fPhone" placeholder="+420 777 000 111">
+          </div>
+        </div>
+        <div class="fg">
+          <label>E-mail *</label>
+          <input type="email" id="fEmail" placeholder="vas@email.cz">
+        </div>
+        <div class="fg">
+          <label>Adresa místa čištění *</label>
+          <input type="text" id="fAddress" placeholder="Ulice 12, Praha 4, 140 00">
+        </div>
+        <div class="fg">
+          <label>Poznámka (nepovinné)</label>
+          <textarea id="fNote" placeholder="Stav povrchu, speciální požadavky..."></textarea>
+        </div>
+        <div class="success-banner" id="successBanner">
+          ✅ <strong>Hotovo!</strong> Váš emailový klient se otevřel s připravenou zprávou. Stačí ji odeslat a ozvu se do 48 hodin.
+        </div>
+        <button class="btn-send" onclick="sendForm()">Odeslat poptávku ✉️</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Profi<span>Wash</span></div>
+  <div>elias.smola@gmail.com</div>
+  <div>© 2025 ProfiWash</div>
+</footer>
+
+<script>
+const services = [
+  { name: "Příjezdová cesta", price: 49, unit: "m²" },
+  { name: "Chodníky",         price: 49, unit: "m²" },
+  { name: "Obrubníky",        price: 29, unit: "bm"  },
+];
+const selected = [false, false, false];
+
+function toggleService(i) {
+  selected[i] = !selected[i];
+  document.getElementById('card-' + i).classList.toggle('selected', selected[i]);
+  updateCalc();
+}
+
+function fmt(n) { return n.toLocaleString('cs-CZ') + ' Kč'; }
+
+function updateCalc() {
+  let total = 0, lines = [], summaryLines = [];
+  for (let i = 0; i < 3; i++) {
+    const val = parseInt(document.getElementById('slider-' + i).value);
+    document.getElementById('val-' + i).textContent = val;
+    const sub = val * services[i].price;
+    document.getElementById('sub-' + i).textContent = fmt(sub);
+    if (selected[i]) {
+      total += sub;
+      lines.push(services[i].name + ' ' + val + ' ' + services[i].unit);
+      summaryLines.push(services[i].name + ': ' + val + ' ' + services[i].unit + ' × ' + services[i].price + ' Kč = ' + fmt(sub));
+    }
+  }
+
+  const priceEl = document.getElementById('resultPrice');
+  const strip   = document.getElementById('resultStrip');
+
+  if (total === 0) {
+    priceEl.innerHTML = '— <small>vyberte službu</small>';
+    document.getElementById('resultNote').textContent = 'Klikněte na službu výše a nastavte plochu';
+    document.getElementById('formPrice').textContent = '—';
+    document.getElementById('formServicesSummary').innerHTML = '<strong>Vybrané služby</strong>Zatím nevybráno — nastavte kalkulačku výše.';
+    strip.classList.remove('has-price');
+  } else {
+    priceEl.classList.remove('price-pop');
+    void priceEl.offsetWidth;
+    priceEl.classList.add('price-pop');
+    priceEl.innerHTML = fmt(total) + ' <small>vč. DPH</small>';
+    document.getElementById('resultNote').textContent = lines.join(' + ');
+    document.getElementById('formPrice').textContent = fmt(total);
+    document.getElementById('formServicesSummary').innerHTML = '<strong>Vybrané služby</strong>' + summaryLines.join('<br>');
+    strip.classList.add('has-price');
+  }
+}
+
+function sendForm() {
+  const name    = document.getElementById('fName').value.trim();
+  const phone   = document.getElementById('fPhone').value.trim();
+  const email   = document.getElementById('fEmail').value.trim();
+  const address = document.getElementById('fAddress').value.trim();
+  const note    = document.getElementById('fNote').value.trim();
+  const price   = document.getElementById('formPrice').textContent;
+
+  if (!name || !phone || !email || !address) {
+    alert('Vyplňte prosím povinná pole: Jméno, Telefon, E-mail, Adresa.');
+    return;
+  }
+
+  let svcDetail = '';
+  for (let i = 0; i < 3; i++) {
+    if (selected[i]) {
+      const val = document.getElementById('slider-' + i).value;
+      svcDetail += '\n  • ' + services[i].name + ': ' + val + ' ' + services[i].unit + ' × ' + services[i].price + ' Kč = ' + fmt(val * services[i].price);
+    }
+  }
+  if (!svcDetail) svcDetail = '\n  (nevybráno)';
+
+  const subject = encodeURIComponent('Poptávka ProfiWash — ' + name);
+  const body = encodeURIComponent(
+    'Nová poptávka z webu ProfiWash\n================================\n' +
+    'Jméno:    ' + name + '\nTelefon:  ' + phone + '\nE-mail:   ' + email + '\nAdresa:   ' + address +
+    '\n\nVybrané služby:' + svcDetail +
+    '\n\nOrientační cena celkem: ' + price +
+    '\n\nPoznámka:\n' + (note || '(bez poznámky)')
+  );
+  window.location.href = 'mailto:elias.smola@gmail.com?subject=' + subject + '&body=' + body;
+  document.getElementById('successBanner').style.display = 'block';
+}
+
+// ─── SCROLL REVEAL ───
+// Robust: threshold 0 + immediate check for already-visible elements
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Fallback: if page is scrolled or observer not supported, reveal all after short delay
+setTimeout(() => {
+  document.querySelectorAll('.reveal:not(.visible)').forEach(el => el.classList.add('visible'));
+}, 600);
+
+updateCalc();
+</script>
+</body>
+</html>
